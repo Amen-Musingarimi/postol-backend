@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
@@ -15,8 +16,9 @@ const fileStorage = multer.diskStorage({
     cb(null, 'images');
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + '-' + file.originalname);
-  }
+    const uniqueFilename = uuidv4();
+    cb(null, uniqueFilename + '-' + file.originalname);
+  },
 });
 
 const fileFilter = (req, file, cb) => {
@@ -36,6 +38,7 @@ app.use(bodyParser.json()); // application/json
 app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
 );
+
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use((req, res, next) => {
@@ -61,13 +64,16 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    'mongodb+srv://maximilian:9u4biljMQc4jjqbe@cluster0-ntrwp.mongodb.net/messages?retryWrites=true'
+    'mongodb+srv://takudzwamusinga:Takudzwa95@cluster0.jpfayga.mongodb.net/messages?retryWrites=true&w=majority'
   )
-  .then(result => {
+  .then((result) => {
     const server = app.listen(8080);
+    // const io = require('socket.io')(server);
     const io = require('./socket').init(server);
-    io.on('connection', socket => {
-      console.log('Client connected');
+    -io.on('connection', (socket) => {
+      console.log('Client connected.');
     });
   })
-  .catch(err => console.log(err));
+  .catch((err) => {
+    console.log(err);
+  });
